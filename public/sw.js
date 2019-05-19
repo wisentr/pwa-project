@@ -6,7 +6,9 @@ self.addEventListener("install", function (event) {
       .then(function (cache) {
         console.log('[ServiceWorker] Precaching App shell');
         /*sw will send the request to the server, get that asset, and stores it, in one step. */
-        cache.add('src/js/app.js');
+        cache.add('/');
+        cache.add('/index.html');
+        cache.add('/src/js/app.js');
       })
   );
 });
