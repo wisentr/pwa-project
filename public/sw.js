@@ -1,3 +1,5 @@
+var CACHE_STATIC_NAME = 'static-v4';
+var CACHE_DYNAMIC_NAME = 'dynamic-v2';
 var CACHED_URLS = [
   '/',
   '/index.html',
@@ -24,7 +26,7 @@ self.addEventListener("install", function (event) {
   console.log("[ServiceWorker] Installing ServiceWorker ...", event);
   //ensuring installation event is not completed before caching is done.
   event.waitUntil(
-    caches.open('static-v2')
+    caches.open(CACHE_STATIC_NAME)
       .then(function (cache) {
         console.log('[ServiceWorker] Precaching App shell');
         /*sw will send the request to the server, get that asset, and stores it, in one step. */
@@ -42,7 +44,7 @@ self.addEventListener("activate", function (event) {
         //Promise.all takes an array of promises, and waits for all of them to finish
         //then i transform array of strings into array of promises by using map method
         return Promise.all(keyList.map(function (key) {
-          if (key !== 'static-v2' && key !== 'dynamic') {
+          if (key !== CACHE_STATIC_NAME && key !== CACHE_DYNAMIC_NAME) {
             console.log('[ServiceWorker] Removing old cache...', key);
             return caches.delete(key);
           }
@@ -68,7 +70,7 @@ self.addEventListener('fetch', function (event) {
           return fetch(event.request)
             //res is response from the actual server
             .then(function (res) {
-              return caches.open('dynamic')
+              return caches.open(CACHE_DYNAMIC_NAME)
                 //cache is created, or opened if it exists already
                 .then(function (cache) {
                   //unlike add, put requires you to provide the request, which I do here
