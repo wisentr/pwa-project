@@ -18,5 +18,19 @@ self.addEventListener("activate", function (event) {
 });
 
 self.addEventListener('fetch', function (event) {
-  event.respondWith(fetch(event.request));
+  event.respondWith(
+    //requests are keys, so i match request
+    caches.match(event.request)
+      //this will be executed regardless the response is null or not. 
+      .then(function (response) {
+        //check if the response is null 
+        if (response) {
+          //returning the response from the cache
+          return response;
+        } else {
+          //if the request key is not in the cache, continue with the original request
+          return fetch(event.request);
+        }
+      })
+  );
 });
