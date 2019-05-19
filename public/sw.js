@@ -24,7 +24,7 @@ self.addEventListener("install", function (event) {
   console.log("[ServiceWorker] Installing ServiceWorker ...", event);
   //ensuring installation event is not completed before caching is done.
   event.waitUntil(
-    caches.open('static')
+    caches.open('static-v2')
       .then(function (cache) {
         console.log('[ServiceWorker] Precaching App shell');
         /*sw will send the request to the server, get that asset, and stores it, in one step. */
@@ -35,6 +35,20 @@ self.addEventListener("install", function (event) {
 
 self.addEventListener("activate", function (event) {
   console.log("[ServiceWorker] Activating ServiceWorker ...", event);
+  event.waitUntil(
+    //keys gives all sub-caches in cache storage
+    caches.keys()
+      .then(function (keyList) {
+        //Promise.all takes an array of promises, and waits for all of them to finish
+        //then i transform array of strings into array of promises by using map method
+        return Promise.all(keyList.map(function (key) {
+          if (key !== 'static-v2' && key !== 'dynamic') {
+            console.log('[ServiceWorker] Removing old cache...', key);
+            return caches.delete(key);
+          }
+        }))
+      })
+  )
   /*To ensure ServiceWorkers are loaded, or are activated correctly */
   return self.clients.claim();
 });
@@ -63,7 +77,10 @@ self.addEventListener('fetch', function (event) {
                   //res.clone() because response obj can be consumed only once, then it will be empty
                   return res;
                 })
-            });
+            })
+            .catch(function (err) {
+
+            })
         }
       })
   );
