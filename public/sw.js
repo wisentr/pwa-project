@@ -51,7 +51,19 @@ self.addEventListener('fetch', function (event) {
           return response;
         } else {
           //if the request key is not in the cache, continue with the original request
-          return fetch(event.request);
+          return fetch(event.request)
+            //res is response from the actual server
+            .then(function (res) {
+              return caches.open('dynamic')
+                //cache is created, or opened if it exists already
+                .then(function (cache) {
+                  //unlike add, put requires you to provide the request, which I do here
+                  //so, put does not send a request, it stores the data you already have
+                  cache.put(event.request.url, res.clone())
+                  //res.clone() because response obj can be consumed only once, then it will be empty
+                  return res;
+                })
+            });
         }
       })
   );
