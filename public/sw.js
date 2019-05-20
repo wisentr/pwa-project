@@ -1,4 +1,4 @@
-var CACHE_STATIC_NAME = 'static-v5';
+var CACHE_STATIC_NAME = 'static-v8';
 var CACHE_DYNAMIC_NAME = 'dynamic-v2';
 var CACHED_URLS = [
   '/',
@@ -56,32 +56,53 @@ self.addEventListener("activate", function (event) {
   return self.clients.claim();
 });
 
+/* //Network with cache fallback strategy
 self.addEventListener('fetch', function (event) {
   event.respondWith(
-    //requests are keys, so i match request
+    fetch(event.request)
+      .then(function(res) {
+        return caches.open(CACHE_DYNAMIC_NAME)
+          .then(function(cache) {
+            cache.put(event.request.url, res.clone());
+            return res;
+          })
+      })
+      .catch(function (err) {
+        return caches.match(event.request);
+      })
+  );
+}); */
+
+//cache then network, dynamic caching
+self.addEventListener('fetch', function (event) {
+  event.respondWith(
+    caches.open(CACHE_DYNAMIC_NAME)
+      .then(function (cache) {
+        return fetch(event.request)
+          .then(function (res) {
+            cache.put(event.request, res.clone());
+            return res;
+          })
+      })
+  );
+});
+
+/* //default caching strategy - Cache With Network Fallback
+self.addEventListener('fetch', function (event) {
+  event.respondWith(
     caches.match(event.request)
-      //this will be executed regardless the response is null or not. 
       .then(function (response) {
-        //check if the response is null 
         if (response) {
-          //returning the response from the cache
           return response;
         } else {
-          //if the request key is not in the cache, continue with the original request
           return fetch(event.request)
-            //res is response from the actual server
             .then(function (res) {
               return caches.open(CACHE_DYNAMIC_NAME)
-                //cache is created, or opened if it exists already
                 .then(function (cache) {
-                  //unlike add, put requires you to provide the request, which I do here
-                  //so, put does not send a request, it stores the data you already have
                   cache.put(event.request.url, res.clone())
-                  //res.clone() because response obj can be consumed only once, then it will be empty
                   return res;
                 })
             })
-            //provide the fallback page here
             .catch(function (err) {
               return caches.open(CACHE_STATIC_NAME)
                 .then(function (cache) {
@@ -91,4 +112,4 @@ self.addEventListener('fetch', function (event) {
         }
       })
   );
-});
+}); */
