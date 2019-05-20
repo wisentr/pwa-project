@@ -1,8 +1,9 @@
-var CACHE_STATIC_NAME = 'static-v4';
+var CACHE_STATIC_NAME = 'static-v5';
 var CACHE_DYNAMIC_NAME = 'dynamic-v2';
 var CACHED_URLS = [
   '/',
   '/index.html',
+  '/offline.html',
   '/src/js/app.js',
   '/src/js/feed.js',
   '/src/js/material.min.js',
@@ -80,9 +81,13 @@ self.addEventListener('fetch', function (event) {
                   return res;
                 })
             })
+            //provide the fallback page here
             .catch(function (err) {
-
-            })
+              return caches.open(CACHE_STATIC_NAME)
+                .then(function (cache) {
+                  return cache.match('/offline.html')
+                });
+            });
         }
       })
   );
