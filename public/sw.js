@@ -56,23 +56,14 @@ self.addEventListener("activate", function (event) {
   return self.clients.claim();
 });
 
-/* //Network with cache fallback strategy
-self.addEventListener('fetch', function (event) {
-  event.respondWith(
-    fetch(event.request)
-      .then(function(res) {
-        return caches.open(CACHE_DYNAMIC_NAME)
-          .then(function(cache) {
-            cache.put(event.request.url, res.clone());
-            return res;
-          })
-      })
-      .catch(function (err) {
-        return caches.match(event.request);
-      })
-  );
-}); */
-
+function isInArray(string, array) {
+  for (let index = 0; index < array.length; index++) {
+    if (array[index] === string) {
+      return true;
+    }
+  }
+  return false;
+}
 
 self.addEventListener('fetch', function (event) {
   var url = 'https://httpbin.org/get';
@@ -89,7 +80,7 @@ self.addEventListener('fetch', function (event) {
         })
     );
     //if the url matches the regexp, load from cache only
-  } else if (new RegExp('\\b' + STATIC_FILES.join('\\b|\\b') + '\\b').test(event.request.url)) {
+  } else if (isInArray(event.request.url, STATIC_FILES)) {
     //cache only strategy for static files
     event.respondWith(
       caches.match(event.request)
@@ -146,6 +137,23 @@ self.addEventListener('fetch', function (event) {
                 });
             });
         }
+      })
+  );
+}); */
+
+/* //Network with cache fallback strategy
+self.addEventListener('fetch', function (event) {
+  event.respondWith(
+    fetch(event.request)
+      .then(function(res) {
+        return caches.open(CACHE_DYNAMIC_NAME)
+          .then(function(cache) {
+            cache.put(event.request.url, res.clone());
+            return res;
+          })
+      })
+      .catch(function (err) {
+        return caches.match(event.request);
       })
   );
 }); */
