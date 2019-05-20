@@ -105,8 +105,9 @@ self.addEventListener('fetch', function (event) {
             .catch(function (err) {
               return caches.open(CACHE_STATIC_NAME)
                 .then(function (cache) {
-                  if (event.request.url.indexOf('/help')) {
-                    //fallback to offline.html only when /help is requested, not for css files :) 
+                  //if incoming request accepts html for an answer... 
+                  if (event.request.headers.get('accept').includes('text/html')) {
+                    //fallback to offline.html only when for example /help is requested, not for css files :) 
                     return cache.match('/offline.html')
                   }
                 });
