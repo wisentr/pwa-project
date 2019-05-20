@@ -1,6 +1,6 @@
 var CACHE_STATIC_NAME = 'static-v8';
 var CACHE_DYNAMIC_NAME = 'dynamic-v2';
-var CACHED_URLS = [
+var STATIC_FILES = [
   '/',
   '/index.html',
   '/offline.html',
@@ -31,7 +31,7 @@ self.addEventListener("install", function (event) {
       .then(function (cache) {
         console.log('[ServiceWorker] Precaching App shell');
         /*sw will send the request to the server, get that asset, and stores it, in one step. */
-        cache.addAll(CACHED_URLS);
+        cache.addAll(STATIC_FILES);
       })
   );
 });
@@ -88,6 +88,12 @@ self.addEventListener('fetch', function (event) {
             })
         })
     );
+    //if the url matches the regexp, load from cache only
+  } else if (new RegExp('\\b' + STATIC_FILES.join('\\b|\\b') + '\\b').test(event.request.url)) {
+    //cache only strategy for static files
+    event.respondWith(
+      caches.match(event.request)
+    );
   } else {
     //cache with network fallback strategy for all the urls except the var url defined upside.
     event.respondWith(caches.match(event.request)
@@ -106,7 +112,10 @@ self.addEventListener('fetch', function (event) {
             .catch(function (err) {
               return caches.open(CACHE_STATIC_NAME)
                 .then(function (cache) {
-                  return cache.match('/offline.html')
+                  if (event.request.url.indexOf('/help')) {
+                    //fallback to offline.html only when /help is requested, not for css files :) 
+                    return cache.match('/offline.html')
+                  }
                 });
             });
         }
