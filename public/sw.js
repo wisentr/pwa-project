@@ -23,6 +23,21 @@ var STATIC_FILES = [
   '/src/images/main-image.jpg'
 ]
 
+function trimCache(cacheName, maxItems) {
+  caches.open(cacheName)
+    .then(function (cache) {
+      return cache.keys()
+        .then(function (keys) {
+          if (keys.length > maxItems) {
+            //remove the oldest key from the cache
+            cache.delete(keys[0])
+              //once the keys.length is <= to maxItem, recursive call will stop.
+              .then(trimCache(cacheName, maxItems))
+          }
+        });
+    })
+}
+
 self.addEventListener("install", function (event) {
   console.log("[ServiceWorker] Installing ServiceWorker ...", event);
   //ensuring installation event is not completed before caching is done.
@@ -76,6 +91,7 @@ self.addEventListener('fetch', function (event) {
         .then(function (cache) {
           return fetch(event.request)
             .then(function (res) {
+              trimCache(CACHE_DYNAMIC_NAME, 30);
               cache.put(event.request, res.clone());
               return res;
             })
@@ -98,6 +114,7 @@ self.addEventListener('fetch', function (event) {
             .then(function (res) {
               return caches.open(CACHE_DYNAMIC_NAME)
                 .then(function (cache) {
+                  trimCache(CACHE_DYNAMIC_NAME, 30);
                   cache.put(event.request.url, res.clone())
                   return res;
                 })
