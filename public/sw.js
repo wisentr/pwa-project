@@ -83,7 +83,7 @@ function isInArray(string, array) {
 }
 
 self.addEventListener('fetch', function (event) {
-  var url = 'https://httpbin.org/get';
+  var url = 'https://pwagram1-dcab1.firebaseio.com/posts';
   if (event.request.url.indexOf(url) > -1) {
     //cache then network, dynamic caching, only for var url defined upside
     event.respondWith(
