@@ -1,5 +1,6 @@
 //can not access the project files in sw.js unless imported here specifically
 importScripts('/src/js/idb.js');
+importScripts('/src/js/db.js');
 
 var CACHE_STATIC_NAME = 'static-v9';
 var CACHE_DYNAMIC_NAME = 'dynamic-v2';
@@ -26,12 +27,6 @@ var STATIC_FILES = [
   // Images
   '/src/images/main-image.jpg'
 ]
-
-var dbPromise = idb.open('posts-store', 1, function (db) {
-  if (!db.objectStoreNames.contains('posts')) {
-    db.createObjectStore('posts', { keyPath: 'id' });
-  }
-});
 
 // function trimCache(cacheName, maxItems) {
 //   caches.open(cacheName)
@@ -103,13 +98,7 @@ self.addEventListener('fetch', function (event) {
           clonedRes.json()//returns a promise
             .then(function (data) {
               for (var key in data) {
-                dbPromise
-                  .then(function (db) {
-                    var tx = db.transaction('posts', 'readwrite');
-                    var store = tx.objectStore('posts');
-                    store.put(data[key]);
-                    return tx.complete;
-                  })
+                writeData('posts', data[key])
               }
             });
           return res;
