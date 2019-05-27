@@ -1,4 +1,7 @@
-var CACHE_STATIC_NAME = 'static-v8';
+//can not access the project files in sw.js unless imported here specifically
+importScripts('/src/js/idb.js');
+
+var CACHE_STATIC_NAME = 'static-v9';
 var CACHE_DYNAMIC_NAME = 'dynamic-v2';
 var STATIC_FILES = [
   '/',
@@ -6,6 +9,7 @@ var STATIC_FILES = [
   '/offline.html',
   '/src/js/app.js',
   '/src/js/feed.js',
+  '/src/js/idb.js',
   '/src/js/material.min.js',
   // polyfills do not need to be cached, since the older browsers do not support serviceworkers anyway. But, there's performance gain. 
   // Even modern browsers need to load these files, because they imported in index.html, so storing them in cache will increase performance.
@@ -23,20 +27,26 @@ var STATIC_FILES = [
   '/src/images/main-image.jpg'
 ]
 
-function trimCache(cacheName, maxItems) {
-  caches.open(cacheName)
-    .then(function (cache) {
-      return cache.keys()
-        .then(function (keys) {
-          if (keys.length > maxItems) {
-            //remove the oldest key from the cache
-            cache.delete(keys[0])
-              //once the keys.length is <= to maxItem, recursive call will stop.
-              .then(trimCache(cacheName, maxItems))
-          }
-        });
-    })
-}
+var dbPromise = idb.open('posts-store', 1, function (db) {
+  if (!db.objectStoreNames.contains('posts')) {
+    db.createObjectStore('posts', { keyPath: 'id' });
+  }
+});
+
+// function trimCache(cacheName, maxItems) {
+//   caches.open(cacheName)
+//     .then(function (cache) {
+//       return cache.keys()
+//         .then(function (keys) {
+//           if (keys.length > maxItems) {
+//             //remove the oldest key from the cache
+//             cache.delete(keys[0])
+//               //once the keys.length is <= to maxItem, recursive call will stop.
+//               .then(trimCache(cacheName, maxItems))
+//           }
+//         });
+//     })
+// }
 
 self.addEventListener("install", function (event) {
   console.log("[ServiceWorker] Installing ServiceWorker ...", event);
@@ -87,14 +97,22 @@ self.addEventListener('fetch', function (event) {
   if (event.request.url.indexOf(url) > -1) {
     //cache then network, dynamic caching, only for var url defined upside
     event.respondWith(
-      caches.open(CACHE_DYNAMIC_NAME)
-        .then(function (cache) {
-          return fetch(event.request)
-            .then(function (res) {
-              trimCache(CACHE_DYNAMIC_NAME, 30);
-              cache.put(event.request, res.clone());
-              return res;
-            })
+      fetch(event.request)
+        .then(function (res) {
+          var clonedRes = res.clone();
+          clonedRes.json()//returns a promise
+            .then(function (data) {
+              for (var key in data) {
+                dbPromise
+                  .then(function (db) {
+                    var tx = db.transaction('posts', 'readwrite');
+                    var store = tx.objectStore('posts');
+                    store.put(data[key]);
+                    return tx.complete;
+                  })
+              }
+            });
+          return res;
         })
     );
     //if the url matches the regexp, load from cache only
@@ -114,7 +132,7 @@ self.addEventListener('fetch', function (event) {
             .then(function (res) {
               return caches.open(CACHE_DYNAMIC_NAME)
                 .then(function (cache) {
-                  trimCache(CACHE_DYNAMIC_NAME, 30);
+                  //trimCache(CACHE_DYNAMIC_NAME, 30);
                   cache.put(event.request.url, res.clone())
                   return res;
                 })
