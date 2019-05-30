@@ -2,6 +2,9 @@
 
 A Progressive Web App, with Instagram like features, to demonstrate performance benefits of PWAs.
 
+# Improved Version
+This version leverages IndexedDB API, compared to the BaseVersion(check the branch *BaseVersion*).
+
 # How to Use
 
 You need [Node.js](https://nodejs.org) installed on your machine. Simply download the installer from [nodejs.org](https://nodejs.org) and go through the installation steps.
