@@ -107,7 +107,7 @@ if ('indexedDB' in window) {
   readAllData('posts')
     .then(function (data) {
       if (!networkDataReceived) {
-        console.log('From Cache', data);
+        console.log('From IDB ', data);
         updateUI(data);
       }
     })

@@ -2,7 +2,7 @@
 importScripts('/src/js/idb.js');
 importScripts('/src/js/db.js');
 
-var CACHE_STATIC_NAME = 'static-v17';
+var CACHE_STATIC_NAME = 'static-v18';
 var CACHE_DYNAMIC_NAME = 'dynamic-v2';
 var STATIC_FILES = [
   '/',
@@ -91,6 +91,11 @@ self.addEventListener('fetch', function (event) {
   var url = 'https://pwagram1-dcab1.firebaseio.com/posts';
   if (event.request.url.indexOf(url) > -1) {
     //cache then network, dynamic caching, only for var url defined upside
+    console.log('event.request.url ->' + event.request.url);
+    console.log('url to /posts ->' + url);
+    console.log('event.request.url.indexOf(url) > -1');
+    console.log(event.request.url.indexOf(url) > -1);
+
     event.respondWith(
       fetch(event.request)
         .then(function (res) {
