@@ -93,6 +93,7 @@ self.addEventListener('fetch', function (event) {
             .then(function (res) {
               //trimCache(CACHE_DYNAMIC_NAME, 30);
               cache.put(event.request, res.clone());
+              console.log("==sw.js== Cache is updated");
               return res;
             })
         })
